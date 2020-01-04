@@ -2,6 +2,7 @@ from scipy.io import wavfile
 from datetime import datetime
 from pathlib import PosixPath
 from datetime import date
+from LTSA import RawLTSA
 
 class PAMLabel:
     def __init__(self, taxon: str, type: str, subtype: str, start: float, end: float):
@@ -26,6 +27,7 @@ class PAMFile:
         self.rate = None
         self._read = False
         self.labels = []
+        self._ltsa = None
 
     def __str__(self):
         return self.__repr__()
@@ -45,6 +47,26 @@ class PAMFile:
     def add_label(self, label: PAMLabel):
         self.labels.append(label)
         print(self.labels)
+
+    def showLTSA(self):
+        self._LTSA()
+        self._ltsa.show()
+
+    def saveLTSA(self, filename: str):
+        self._LTSA()
+        self._ltsa.save(filename)
+
+    def _LTSA(self):
+        if not self._ltsa:
+            params = {'div_len': 22050,
+                      'subdiv_len': 4096,
+                      'nfft': 4096,
+                      'noverlap': 1000}
+            rate, wave = self.read()
+            self._ltsa = RawLTSA(wave, rate)
+            self._ltsa.set_params(params)
+            self._ltsa()
+            self._ltsa.crop(fmax=6000)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
