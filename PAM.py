@@ -2,6 +2,7 @@ from scipy.io import wavfile
 from datetime import datetime
 from pathlib import PosixPath
 from datetime import date
+import numpy as np
 from LTSA import RawLTSA
 
 class PAMLabel:
@@ -48,6 +49,17 @@ class PAMFile:
         self.labels.append(label)
         print(self.labels)
 
+    def extract_label_wave(self, label: PAMLabel, padding: float = 1):
+        rate, wave = self.read()
+        start = int(np.floor((label.start - padding) * rate))
+        end = int(np.ceil((label.end + padding) * rate))
+        return wave[start:end]
+
+    def save_label_wave(self, filename: str, label: PAMLabel, padding: float = 1):
+        rate, wave = self.read()
+        label_wave = self.extract_label_wave(label, padding)
+        wavfile.write(filename, rate, label_wave)
+
     def showLTSA(self):
         self._LTSA()
         self._ltsa.show()
@@ -58,6 +70,7 @@ class PAMFile:
 
     def _LTSA(self):
         if not self._ltsa:
+            # these params should prbly be modified based on the rate..?
             params = {'div_len': 22050,
                       'subdiv_len': 4096,
                       'nfft': 4096,
